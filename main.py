@@ -13,28 +13,28 @@ from openai import OpenAI
 # ====================================================
 # PAGE CONFIG
 # ====================================================
-import socket, requests, ssl
-import streamlit as st
+# import socket, requests, ssl
+# import streamlit as st
 
-st.title("🔍 Network Diagnostic")
+# st.title("🔍 Network Diagnostic")
 
-try:
-    r = requests.get("https://generativelanguage.googleapis.com", timeout=5)
-    st.write("Direct connection:", r.status_code)
-except Exception as e:
-    st.write("Direct connection error:", str(e))
+# try:
+#     r = requests.get("https://generativelanguage.googleapis.com", timeout=5)
+#     st.write("Direct connection:", r.status_code)
+# except Exception as e:
+#     st.write("Direct connection error:", str(e))
 
-try:
-    ctx = ssl.create_default_context()
-    with ctx.wrap_socket(socket.socket(), server_hostname="generativelanguage.googleapis.com") as s:
-        s.settimeout(5)
-        s.connect(("generativelanguage.googleapis.com", 443))
-        st.write("TLS handshake OK")
-except Exception as e:
-    st.write("TLS handshake error:", str(e))
+# try:
+#     ctx = ssl.create_default_context()
+#     with ctx.wrap_socket(socket.socket(), server_hostname="generativelanguage.googleapis.com") as s:
+#         s.settimeout(5)
+#         s.connect(("generativelanguage.googleapis.com", 443))
+#         st.write("TLS handshake OK")
+# except Exception as e:
+#     st.write("TLS handshake error:", str(e))
 
-st.set_page_config(page_title="Assertion–Reason Generator (Costed)", page_icon="🧠", layout="wide")
-st.title("🧠 Assertion–Reason Generator — Gemini 2.5 Pro + GPT-5 (Costed, Modular)")
+st.set_page_config(page_title="Assertion–Reason Generator", page_icon="🧠", layout="wide")
+st.title("🧠 Assertion–Reason Generator")
 
 # ====================================================
 # API KEY INPUT
