@@ -13,6 +13,26 @@ from openai import OpenAI
 # ====================================================
 # PAGE CONFIG
 # ====================================================
+import socket, requests, ssl
+import streamlit as st
+
+st.title("🔍 Network Diagnostic")
+
+try:
+    r = requests.get("https://generativelanguage.googleapis.com", timeout=5)
+    st.write("Direct connection:", r.status_code)
+except Exception as e:
+    st.write("Direct connection error:", str(e))
+
+try:
+    ctx = ssl.create_default_context()
+    with ctx.wrap_socket(socket.socket(), server_hostname="generativelanguage.googleapis.com") as s:
+        s.settimeout(5)
+        s.connect(("generativelanguage.googleapis.com", 443))
+        st.write("TLS handshake OK")
+except Exception as e:
+    st.write("TLS handshake error:", str(e))
+
 st.set_page_config(page_title="Assertion–Reason Generator (Costed)", page_icon="🧠", layout="wide")
 st.title("🧠 Assertion–Reason Generator — Gemini 2.5 Pro + GPT-5 (Costed, Modular)")
 
@@ -190,9 +210,7 @@ gemini_result = {}
 
 gpt_done = threading.Event()
 gemini_done = threading.Event()
-# ====================================================
-# MODEL RUNNERS (SAFE, NO THREADING)
-# ====================================================
+
 
 def run_gpt(prompt, api_key):
     client = OpenAI(api_key=api_key)
@@ -203,20 +221,20 @@ def run_gpt(prompt, api_key):
             input=prompt
         )
         text = response.output_text or str(response)
-        return {"raw": response, "text": text}
-
+        gpt_result["raw"] = response
+        gpt_result["text"] = text
     except Exception as e:
-        return {"raw": None, "text": f"[GPT-5 error] {e}"}
+        gpt_result["raw"] = None
+        gpt_result["text"] = f"[GPT-5 error] {e}"
+    finally:
+        gpt_done.set()
 
 
 def run_gemini(prompt, api_key):
     client = genai.Client(api_key=api_key)
     try:
         config = types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(
-                include_thoughts=False,
-                thinking_budget=4000
-            )
+            thinking_config=types.ThinkingConfig(include_thoughts=False, thinking_budget=4000)
         )
 
         response = client.models.generate_content(
@@ -225,35 +243,46 @@ def run_gemini(prompt, api_key):
             config=config
         )
 
-        # Extract text
+        # extract text
         text = ""
         for c in response.candidates or []:
             for p in c.content.parts or []:
                 if hasattr(p, "text"):
                     text += p.text + "\n\n"
 
-        return {"raw": response, "text": text.strip()}
-
+        gemini_result["raw"] = response
+        gemini_result["text"] = text.strip()
     except Exception as e:
-        return {"raw": None, "text": f"[Gemini error] {e}"}
-
+        gemini_result["raw"] = None
+        gemini_result["text"] = f"[Gemini error] {e}"
+    finally:
+        gemini_done.set()
 
 # ====================================================
-# MAIN ORCHESTRATOR (SEQUENTIAL + STABLE)
+# MAIN ORCHESTRATOR
 # ====================================================
-
 def orchestrate(final_prompt):
-    st.info("Running GPT-5...")
-    gpt_result = run_gpt(final_prompt, OPENAI_API_KEY)
+    gpt_done.clear()
+    gemini_done.clear()
 
-    st.info("Running Gemini 2.5 Pro...")
-    gem_result = run_gemini(final_prompt, GEMINI_API_KEY)
+    # Start both in parallel
+    threading.Thread(target=run_gpt, args=(final_prompt, OPENAI_API_KEY), daemon=True).start()
+    threading.Thread(target=run_gemini, args=(final_prompt, GEMINI_API_KEY), daemon=True).start()
+
+    # Wait
+    overall_status = st.empty()
+    overall_status.info("Running...")
+
+    while not (gpt_done.is_set() and gemini_done.is_set()):
+        time.sleep(0.1)
+
+    overall_status.success("Both models finished ✔")
 
     # ===========================
     # Extract tokens & costs
     # ===========================
     gpt_tokens = extract_gpt_tokens(gpt_result["raw"])
-    gem_tokens = extract_gemini_tokens(gem_result["raw"])
+    gem_tokens = extract_gemini_tokens(gemini_result["raw"])
 
     gpt_costs = calculate_gpt_cost(gpt_tokens)
     gem_costs = calculate_gemini_cost(gem_tokens)
@@ -261,8 +290,6 @@ def orchestrate(final_prompt):
     total_gpt = sum(gpt_costs.values())
     total_gem = sum(gem_costs.values())
     total_all = total_gpt + total_gem
-
-    st.success("Both models finished ✔")
 
     # ===========================
     # OUTPUTS
@@ -273,7 +300,7 @@ def orchestrate(final_prompt):
     st.write(gpt_result["text"])
 
     st.subheader("Gemini 2.5 Pro Output")
-    st.write(gem_result["text"])
+    st.write(gemini_result["text"])
 
     # ===========================
     # COST TABLES
@@ -289,7 +316,6 @@ def orchestrate(final_prompt):
 
     st.markdown("---")
     st.markdown(f"### Final Total Cost: **${total_all:.6f}**")
-
 
     # st.markdown("### 🔍 Final Prompt")
     # st.code(final_prompt)
