@@ -1,0 +1,158 @@
+prompt: |
+  🧩 PROMPT: Assertion–Reason Item Generator
+
+  You are an expert in developing Assertion–Reason–type higher-order questions for Mathematics.  
+  Follow all the rules and structure precisely.
+
+  ---
+
+  ### Inputs (Provided by User)
+    - Subject / Course / Grade: {subject}
+    - Chapter Number & Name: {chapter}
+    - Number of Questions (N): {num_questions}
+    - Topics: {key_concepts}
+
+
+  ---
+  What is DOK 2 and DOK 3 ?
+
+    DOK 2 (Applying): Focuses on applying the concept or formula to solve problems, represent mathematical ideas, or compute solutions using basic procedures.
+    DOK 3 (Reasoning): Focuses on multi-step problem-solving requiring justification of answers, analyzing relationships, interpreting results, and drawing conclusions from the given scenario or data.
+
+  ---
+  ### Your Task
+  Generate {{num_questions}} Assertion–Reason questions based on the inputs above.
+
+  Each question must:
+    - Cover only one Topic (no mixing).  
+    - Be original, not copied or rephrased from textbooks.  
+    - Include mathematically valid reasoning and logical relationships between assertion and reason.
+    - Each question must be unique and not a repetition or rewording of another.
+    - Need to be DOK 2 or DOK 3 (questions needs to be hard )
+  The questions must be at Depth of Knowledge (DOK) Level 2 or 3, ensuring higher cognitive demand. Each question should go beyond recall or simple application, requiring reasoning, analysis, or multi-step problem-solving. If a question seems too straightforward after paraphrasing, revise it to increase complexity — for example, by adding conditions, comparisons, justifications, or requiring explanation of reasoning.
+
+
+  ---
+
+  ### Answer Options (Fixed for Every Question)
+  (A) Both Assertion (A) and Reason (R) are true and R is the correct explanation of A.  
+  (B) Both Assertion (A) and Reason (R) are true but R is not the correct explanation of A.  
+  (C) Assertion (A) is true but Reason (R) is false.  
+  (D) Assertion (A) is false but Reason (R) is true.  
+
+  ---
+
+  ### Answer Distribution Rule
+  - Distribute the correct options as evenly as possible among (A), (B), (C), and (D).  
+  - Example:  
+    - If N = 8 → 2 each (A, B, C, D)  
+    - If N = 9 → 2–2–2–3 distribution  
+  - If exact equality is not possible, adjust minimally while maintaining balance.
+
+  ---
+
+  ### GENERALIZED STRUCTURE & DESIGN RULES
+
+
+    1. UNIQUENESS
+      - Each question must be conceptually distinct.
+      - Do not repeat logic, reasoning pattern, or formula use across questions.
+      - Avoid variations that only change numbers or phrasing.
+
+    2. CONCEPT RELEVANCE
+      - Assertion and Reason must both align strictly with the specified chapter and Topic ( Topics are mentioned above ).
+      - Do not mix chapters or introduce unrelated content.
+
+    3. REASONING QUALITY
+      - Reason should not merely restate or paraphrase the Assertion.
+      - Must reflect a principle, rule, or relationship that supports or contradicts logically.
+      - Avoid definitions as reasons.
+      - Must be testable and conceptually valid — not opinion-based.
+
+  ### STRICT RULES FOR ASSERTION–REASON QUESTIONS
+
+    -  **Ban trivial true/false assertions:**  
+      Assertions must require reasoning, not simple factual recall.
+
+    -  **Stick strictly to the given grade, subject, and chapter:**  
+      No out-of-syllabus or higher-level concepts.
+
+    -  **Reason must be independent (not a paraphrase):**  
+      The Reason must introduce a separate mathematical idea, not repeat the Assertion.
+
+    -  **Assertion and Reason must be from the same mathematical domain:**  
+      Both must relate to the same area of math (algebra with algebra, geometry with geometry).
+
+    -  **Reason must be logically relevant:**  
+      Even if not the correct explanation, it must still relate meaningfully to the Assertion.
+
+    -  **Ensure conceptual variety:**  
+      Each question must use a different type of reasoning or mathematical concept.
+
+    -  **Use only mathematics, no physics/chemistry contexts:**  
+      Do not use velocity, pressure, force, acids, etc. Only math concepts.
+
+    -  **Use correct mathematical notation:**  
+      All symbols, expressions, and equations must be valid and formatted correctly.
+
+  ### Output Format
+
+  #### Section A: Assertion–Reason 
+
+    Present each **Assertion–Reason** question clearly, followed by the **topic** it belongs to (in brackets) and the **correct option**.
+
+    **Example:**
+     **Topic:** Nature of Roots
+      Assertion (A): The quadratic equation (x^2 + 4x + 5 = 0) has no real roots.
+      Reason (R): The discriminant ((D)) of a quadratic equation (ax^2 + bx + c = 0) is given by (D = b^2 - 4ac).
+    
+      **Correct Option:** B 
+
+    **Assertion and Reasnoning needs to be in seperate lines (keep proper spacing after each sentence for readability)
+  ---
+
+  #### Section B: Detailed Justification and Rigor
+
+  For each question, provide a detailed analysis in the following structure:
+
+  Question [#] (Correct Option: [A/B/C/D])  
+  - Assertion (A) Analysis: State whether A is true or false and justify with proof, example, or property.  
+  - Reason (R) Analysis: State whether R is true or false and justify with the correct concept or theorem.  
+  - Logical Link/Justification: Explain clearly why the selected option is correct —  
+    - If Option A/B: clarify how the Reason is or isn’t a valid explanation.  
+    - If Option C/D: explain the truth–falsehood mismatch precisely.
+
+  ---
+
+  ### Content & Rigor Requirements
+  1. Each question must represent one clear concept.  
+  2. Include variety across the provided subtopics — don’t repeat the same logic pattern.  
+  3. Prefer misconceptions, boundary cases, or exceptions to test conceptual clarity.  
+  4. Avoid factual recall or purely definitional items.
+
+  ---
+
+  ### Final Output Expectations
+  - {{num_questions}} well-distributed Assertion–Reason items.  
+  - Balanced answer keys.  
+  - All questions properly formatted with both overview table and detailed analysis section.
+
+  Example of an Assertion and Reasoning question for  6th grade
+
+    1. A statement of assertion (A) is followed by a statement of reason (R). 
+
+        Assertion (A): Increasing the width of a rectangle while maintaining a constant area leads to an increase in its perimeter.     
+        Reason (R): Changing the dimensions of a rectangle affects its perimeter.
+    
+      Which among the following options is true regarding the given statements?
+    
+    2. A statement of assertion (A) is followed by a statement of reason (R).
+
+        Assertion (A): A figure with 7 radial arms has no rotational symmetry, since 7 is not a factor of 360°.
+        Reason (R): If the smallest angle of symmetry of a figure is a natural number in degrees, then it is a factor of 360°.
+
+      Which among the following options is true regarding the given statements?
+    
+  
+  OUTPUT SHOULD BE IN MARKDOWN FORMAT
+
