@@ -37,11 +37,25 @@ st.set_page_config(page_title="Assertion–Reason Generator", page_icon="🧠", 
 st.title("🧠 Assertion–Reason Generator")
 
 # ====================================================
-# API KEY INPUT
+# MODEL SELECTION & API KEY INPUT
 # ====================================================
+st.markdown("### 🤖 Select Models")
+selected_models = st.multiselect(
+    "Choose models to use:",
+    ["GPT-5", "Gemini 2.5 Pro"],
+    default=["Gemini 2.5 Pro"]
+)
+
 st.markdown("### 🔐 Enter API Keys")
-OPENAI_API_KEY = st.text_input("OpenAI API Key", type="password")
-GEMINI_API_KEY = st.text_input("Gemini API Key", type="password")
+OPENAI_API_KEY = ""
+GEMINI_API_KEY = ""
+
+if "GPT-5" in selected_models:
+    OPENAI_API_KEY = st.text_input("OpenAI API Key", type="password")
+
+if "Gemini 2.5 Pro" in selected_models:
+    GEMINI_API_KEY = st.text_input("Gemini API Key", type="password")
+
 st.markdown("---")
 
 # ====================================================
@@ -79,6 +93,7 @@ PROMPT_TEMPLATE = data["prompt"]
 # ====================================================
 with st.form("input_form"):
     subject = st.text_input("📘 Subject", "Mathematics")
+    grade = st.text_input("🎓 Grade", "Class 10")
     chapter = st.text_input("📖 Chapter", "Real Numbers")
     num_questions = st.number_input("🔢 Number of Questions", min_value=1, max_value=20, value=5)
 
@@ -87,17 +102,24 @@ with st.form("input_form"):
         "Euclid’s Division Lemma\nFundamental Theorem of Arithmetic\nIrrational Numbers"
     )
 
+    topics = st.text_area(
+        "📚 Topics",
+        "Real Numbers, Euclid's Division Lemma"
+    )
+
     generate_btn = st.form_submit_button("🚀 Generate Questions")
 
 # ====================================================
 # PROMPT BUILDER
 # ====================================================
-def build_prompt(subject, chapter, num_questions, key_concepts):
+def build_prompt(subject, grade, chapter, num_questions, key_concepts, topics):
     inputs = {
         "subject": subject,
+        "grade": grade,
         "chapter": chapter,
         "num_questions": num_questions,
-        "key_concepts": key_concepts
+        "key_concepts": key_concepts,
+        "topics": topics
     }
 
     try:
@@ -261,31 +283,46 @@ def run_gemini(prompt, api_key):
 # ====================================================
 # MAIN ORCHESTRATOR
 # ====================================================
-def orchestrate(final_prompt):
+def orchestrate(final_prompt, selected_models):
     gpt_done.clear()
     gemini_done.clear()
 
     # Start both in parallel
-    threading.Thread(target=run_gpt, args=(final_prompt, OPENAI_API_KEY), daemon=True).start()
-    threading.Thread(target=run_gemini, args=(final_prompt, GEMINI_API_KEY), daemon=True).start()
+    if "GPT-5" in selected_models:
+        threading.Thread(target=run_gpt, args=(final_prompt, OPENAI_API_KEY), daemon=True).start()
+    
+    if "Gemini 2.5 Pro" in selected_models:
+        threading.Thread(target=run_gemini, args=(final_prompt, GEMINI_API_KEY), daemon=True).start()
 
     # Wait
     overall_status = st.empty()
     overall_status.info("Running...")
 
-    while not (gpt_done.is_set() and gemini_done.is_set()):
+    while True:
+        gpt_finished = gpt_done.is_set() if "GPT-5" in selected_models else True
+        gemini_finished = gemini_done.is_set() if "Gemini 2.5 Pro" in selected_models else True
+        
+        if gpt_finished and gemini_finished:
+            break
         time.sleep(0.1)
 
-    overall_status.success("Both models finished ✔")
+    overall_status.success("Generation finished ✔")
 
     # ===========================
     # Extract tokens & costs
     # ===========================
-    gpt_tokens = extract_gpt_tokens(gpt_result["raw"])
-    gem_tokens = extract_gemini_tokens(gemini_result["raw"])
+    gpt_tokens = {"input": 0, "cached_input": 0, "output": 0}
+    gem_tokens = {"input": 0, "candidates": 0, "thinking": 0, "output_total": 0}
+    gpt_costs = {"normal_input": 0, "cached_input": 0, "output": 0}
+    gem_costs = {"input": 0, "candidates": 0, "thinking": 0, "output_total": 0}
 
-    gpt_costs = calculate_gpt_cost(gpt_tokens)
-    gem_costs = calculate_gemini_cost(gem_tokens)
+    if "GPT-5" in selected_models:
+        gpt_tokens = extract_gpt_tokens(gpt_result.get("raw"))
+        gpt_costs = calculate_gpt_cost(gpt_tokens)
+
+    if "Gemini 2.5 Pro" in selected_models:
+        gem_tokens = extract_gemini_tokens(gemini_result.get("raw"))
+        gem_costs = calculate_gemini_cost(gem_tokens)
 
     total_gpt = sum(gpt_costs.values())
     total_gem = sum(gem_costs.values())
@@ -296,11 +333,13 @@ def orchestrate(final_prompt):
     # ===========================
     st.markdown("## 🧠 Model Outputs")
 
-    st.subheader("GPT-5 Output")
-    st.write(gpt_result["text"])
+    if "GPT-5" in selected_models:
+        st.subheader("GPT-5 Output")
+        st.write(gpt_result.get("text", ""))
 
-    st.subheader("Gemini 2.5 Pro Output")
-    st.write(gemini_result["text"])
+    if "Gemini 2.5 Pro" in selected_models:
+        st.subheader("Gemini 2.5 Pro Output")
+        st.write(gemini_result.get("text", ""))
 
     # ===========================
     # COST TABLES
@@ -308,25 +347,33 @@ def orchestrate(final_prompt):
     st.markdown("---")
     st.markdown("## 💰 Cost Breakdown")
 
-    st.markdown("### GPT-5 Cost")
-    st.table(build_gpt_cost_table(gpt_tokens, gpt_costs))
+    if "GPT-5" in selected_models:
+        st.markdown("### GPT-5 Cost")
+        st.table(build_gpt_cost_table(gpt_tokens, gpt_costs))
 
-    st.markdown("### Gemini 2.5 Pro Cost")
-    st.table(build_gemini_cost_table(gem_tokens, gem_costs))
+    if "Gemini 2.5 Pro" in selected_models:
+        st.markdown("### Gemini 2.5 Pro Cost")
+        st.table(build_gemini_cost_table(gem_tokens, gem_costs))
 
     st.markdown("---")
     st.markdown(f"### Final Total Cost: **${total_all:.6f}**")
 
-    # st.markdown("### 🔍 Final Prompt")
-    # st.code(final_prompt)
 
 # ====================================================
 # RUN
 # ====================================================
 if generate_btn:
-    if not OPENAI_API_KEY or not GEMINI_API_KEY:
-        st.error("Enter both API keys.")
+    if not selected_models:
+        st.error("Please select at least one model.")
         st.stop()
 
-    prompt = build_prompt(subject, chapter, num_questions, key_concepts)
-    orchestrate(prompt)
+    if "GPT-5" in selected_models and not OPENAI_API_KEY:
+        st.error("Please enter OpenAI API Key.")
+        st.stop()
+        
+    if "Gemini 2.5 Pro" in selected_models and not GEMINI_API_KEY:
+        st.error("Please enter Gemini API Key.")
+        st.stop()
+
+    prompt = build_prompt(subject, grade, chapter, num_questions, key_concepts, topics)
+    orchestrate(prompt, selected_models)

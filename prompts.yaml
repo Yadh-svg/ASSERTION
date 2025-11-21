@@ -8,10 +8,19 @@ prompt: |
 
   ### Inputs (Provided by User)
     - Subject / Course / Grade: {subject}
+    - Grade Level: {grade}
     - Chapter Number & Name: {chapter}
     - Number of Questions (N): {num_questions}
-    - Topics: {key_concepts}
+    - Key Concepts: {key_concepts}
+    - Topics: {topics}
 
+  - The purpose of analyzing key_concepts is solely to ensure the questions remain:
+    - grade-appropriate,
+    - aligned with what the student has already learned,
+    - and correctly situated within the chapter’s conceptual progression.
+
+  - Do NOT create questions mixing prerequisite topics not listed in {topics}.  
+    Key concepts guide background understanding, but topics generate the actual content.
 
   ---
   What is DOK 2 and DOK 3 ?
@@ -19,37 +28,61 @@ prompt: |
     DOK 2 (Applying): Focuses on applying the concept or formula to solve problems, represent mathematical ideas, or compute solutions using basic procedures.
     DOK 3 (Reasoning): Focuses on multi-step problem-solving requiring justification of answers, analyzing relationships, interpreting results, and drawing conclusions from the given scenario or data.
 
+    **IMPORTANT: Adjust the complexity of DOK 2 and DOK 3 questions to be appropriate for {grade} level.**
+    - For lower grades, focus on simpler reasoning and direct application.
+    - For higher grades, require more abstract reasoning and multi-step proofs.
+
   ---
   ### Your Task
   Generate {{num_questions}} Assertion–Reason questions based on the inputs above.
 
   Each question must:
-    - Cover only one Topic (no mixing).  
+     
     - Be original, not copied or rephrased from textbooks.  
     - Include mathematically valid reasoning and logical relationships between assertion and reason.
     - Each question must be unique and not a repetition or rewording of another.
     - Need to be DOK 2 or DOK 3 (questions needs to be hard )
+    - Should be from topics mentioned in {topics}
+    - {key_concepts} may contain subtopics of the topics (which will be clearly defined) if you are able to correctly identify use all the subtopics of each topic from key_concepts you can use that to generate questions
   The questions must be at Depth of Knowledge (DOK) Level 2 or 3, ensuring higher cognitive demand. Each question should go beyond recall or simple application, requiring reasoning, analysis, or multi-step problem-solving. If a question seems too straightforward after paraphrasing, revise it to increase complexity — for example, by adding conditions, comparisons, justifications, or requiring explanation of reasoning.
 
+  ## Topic Mixing Allowed
+  - Assertion and Reason should come from different topics listed in {topics}.
 
-  ---
 
-  ### Answer Options (Fixed for Every Question)
-  (A) Both Assertion (A) and Reason (R) are true and R is the correct explanation of A.  
-  (B) Both Assertion (A) and Reason (R) are true but R is not the correct explanation of A.  
-  (C) Assertion (A) is true but Reason (R) is false.  
-  (D) Assertion (A) is false but Reason (R) is true.  
+  - Topic combinations must be mathematically meaningful, not random.
+  - Mixing must remain within the same chapter, grade, and domain-level expectations and the topic mentioned.
 
-  ---
+  ## No Equal Topic Distribution
 
-  ### Answer Distribution Rule
-  - Distribute the correct options as evenly as possible among (A), (B), (C), and (D).  
-  - Example:  
-    - If N = 8 → 2 each (A, B, C, D)  
-    - If N = 9 → 2–2–2–3 distribution  
-  - If exact equality is not possible, adjust minimally while maintaining balance.
+  - Topic mixing is allowed and encouraged for depth.
+  If multiple topic are in  {topics}
+    - All the questions must be the mix of each topics (dont give individual topic questions or question mix of same topics )
+  If only one topic is in {topics}
+    - All teh questions must be from that topic
+  -
+    ---
 
-  ---
+    ### Answer Options (Fixed for Every Question)
+    (A) Both Assertion (A) and Reason (R) are true and R is the correct explanation of A.  
+    (B) Both Assertion (A) and Reason (R) are true but R is not the correct explanation of A.  
+    (C) Assertion (A) is true but Reason (R) is false.  
+    (D) Assertion (A) is false but Reason (R) is true.  
+
+    ---
+
+  #  **ANSWER DISTRIBUTION RULE (UPDATED)**
+
+    Ensure the final answer key across all questions follows this distribution:
+
+    - **20%** of questions → **Correct Option A**
+    - **30%** of questions → **Correct Option B**
+    - **25%** of questions → **Correct Option C**
+    - **25%** of questions → **Correct Option D**
+
+    FOR EG : 10 QUESTION 
+    then  A=2, B=3, C=2, D=3
+    Total must always equal {num_questions}.
 
   ### GENERALIZED STRUCTURE & DESIGN RULES
 
@@ -122,7 +155,17 @@ prompt: |
     - If Option A/B: clarify how the Reason is or isn’t a valid explanation.  
     - If Option C/D: explain the truth–falsehood mismatch precisely.
 
-  ---
+  ### DISTRACTOR ANALYSIS (Mandatory for Every Question)
+
+    After explaining the correct option, provide a **student-friendly distractor analysis** for all incorrect options.
+
+    The analysis must:
+
+    - Address the misunderstanding a student might have had if they selected that option.
+    - Explain **why that option is incorrect** in clear, simple reasoning.
+    - Reference the mathematical logic, not generic statements.
+    - Be personalized ("you might have thought…", "you may have overlooked…") to match how a teacher explains feedback.
+
 
   ### Content & Rigor Requirements
   1. Each question must represent one clear concept.  
