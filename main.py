@@ -97,14 +97,14 @@ with st.form("input_form"):
     chapter = st.text_input("📖 Chapter", "Real Numbers")
     num_questions = st.number_input("🔢 Number of Questions", min_value=1, max_value=20, value=5)
 
-    key_concepts = st.text_area(
-        "🧩 Key Concepts (one per line)",
-        "Euclid’s Division Lemma\nFundamental Theorem of Arithmetic\nIrrational Numbers"
-    )
-
     topics = st.text_area(
         "📚 Topics",
         "Real Numbers, Euclid's Division Lemma"
+    )
+
+    key_concepts = st.text_area(
+        "🧩 Key Concepts (one per line)",
+        "Euclid’s Division Lemma\nFundamental Theorem of Arithmetic\nIrrational Numbers"
     )
 
     generate_btn = st.form_submit_button("🚀 Generate Questions")
@@ -256,7 +256,7 @@ def run_gemini(prompt, api_key):
     client = genai.Client(api_key=api_key)
     try:
         config = types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(include_thoughts=False, thinking_budget=4000)
+            thinking_config=types.ThinkingConfig(include_thoughts=False, thinking_budget=5000)
         )
 
         response = client.models.generate_content(

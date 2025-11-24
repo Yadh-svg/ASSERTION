@@ -11,8 +11,8 @@ prompt: |
     - Grade Level: {grade}
     - Chapter Number & Name: {chapter}
     - Number of Questions (N): {num_questions}
-    - Key Concepts: {key_concepts}
     - Topics: {topics}
+    - Key Concepts: {key_concepts}
 
   - The purpose of analyzing key_concepts is solely to ensure the questions remain:
     - grade-appropriate,
@@ -23,12 +23,11 @@ prompt: |
     Key concepts guide background understanding, but topics generate the actual content.
 
   ---
-  What is DOK 2 and DOK 3 ?
+  What DOK 3 ?
 
-    DOK 2 (Applying): Focuses on applying the concept or formula to solve problems, represent mathematical ideas, or compute solutions using basic procedures.
     DOK 3 (Reasoning): Focuses on multi-step problem-solving requiring justification of answers, analyzing relationships, interpreting results, and drawing conclusions from the given scenario or data.
 
-    **IMPORTANT: Adjust the complexity of DOK 2 and DOK 3 questions to be appropriate for {grade} level.**
+    **IMPORTANT: Adjust the complexity of DOK 3 questions to be appropriate for {grade} level.**
     - For lower grades, focus on simpler reasoning and direct application.
     - For higher grades, require more abstract reasoning and multi-step proofs.
 
@@ -41,10 +40,34 @@ prompt: |
     - Be original, not copied or rephrased from textbooks.  
     - Include mathematically valid reasoning and logical relationships between assertion and reason.
     - Each question must be unique and not a repetition or rewording of another.
-    - Need to be DOK 2 or DOK 3 (questions needs to be hard )
+    - Need to be DOK 3 (questions needs to be hard )
     - Should be from topics mentioned in {topics}
     - {key_concepts} may contain subtopics of the topics (which will be clearly defined) if you are able to correctly identify use all the subtopics of each topic from key_concepts you can use that to generate questions
   The questions must be at Depth of Knowledge (DOK) Level 2 or 3, ensuring higher cognitive demand. Each question should go beyond recall or simple application, requiring reasoning, analysis, or multi-step problem-solving. If a question seems too straightforward after paraphrasing, revise it to increase complexity — for example, by adding conditions, comparisons, justifications, or requiring explanation of reasoning.
+
+  ### Question Uniqueness — Topic-Locked, Expression-Creative
+
+    - All questions must be built strictly from the concepts inside {topics}. 
+      No new ideas, no new theorems, no external logic, and nothing outside the student’s syllabus.
+
+    - Uniqueness must NOT come from adding new concepts.  
+      Instead, uniqueness must come from:
+          • using fresh, uncommon expressions or numerical setups  
+          • structuring the scenario in a non-standard way  
+          • combining allowed subtopics in a less typical sequence  
+          • presenting relationships in an unconventional (but valid) configuration  
+
+      Think of it like “backtracking” in problem design:
+      you explore a different path **within** the same topic boundaries,  
+      without stepping outside the original concept space.
+
+    - Avoid expressions that are commonly used in textbooks or exam guides  
+      (e.g., avoid the typical “x² + 5x + 6 = 0” or “a is a natural number” style).
+      Use mathematically correct expressions that are still unusual or rarely seen.
+
+    - Despite using unique expressions, the language and notation must remain
+      academically correct and aligned with standard mathematics.
+
 
   ## Topic Mixing Allowed
   - Assertion and Reason should come from different topics listed in {topics}.
@@ -155,16 +178,15 @@ prompt: |
     - If Option A/B: clarify how the Reason is or isn’t a valid explanation.  
     - If Option C/D: explain the truth–falsehood mismatch precisely.
 
-  ### DISTRACTOR ANALYSIS (Mandatory for Every Question)
+  ### DISTRACTOR ANALYSIS (Mandatory for Every Question — Separate Style Requirements)
 
-    After explaining the correct option, provide a **student-friendly distractor analysis** for all incorrect options.
+    After the detailed justification, provide concise distractor feedback for **each incorrect option**.
 
-    The analysis must:
-
-    - Address the misunderstanding a student might have had if they selected that option.
-    - Explain **why that option is incorrect** in clear, simple reasoning.
-    - Reference the mathematical logic, not generic statements.
-    - Be personalized ("you might have thought…", "you may have overlooked…") to match how a teacher explains feedback.
+    Rules for distractor feedback:
+    - Length & Tone: Each explanation must be **under 4 lines**, written conversationally ("you might have thought…", "you may have overlooked…") while remaining mathematically precise.
+    - Purpose: Identify the **specific misconception** that would plausibly lead a student to choose that option and explain **why it is incorrect**, referencing the relevant logic, property, or step.
+    - Avoid generic labels (e.g., "careless mistake"); instead, point to the exact misapplied rule or misread symbol (e.g., "you treated √(a+b) as √a+√b" or "you applied distributivity to a non-linear expression").
+    - Maintain consistency with question notation and do not introduce new variables or extra unfamiliar concepts in the distractor lines.
 
 
   ### Content & Rigor Requirements
