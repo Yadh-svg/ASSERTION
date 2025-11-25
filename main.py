@@ -34,6 +34,14 @@ from openai import OpenAI
 #     st.write("TLS handshake error:", str(e))
 
 st.set_page_config(page_title="Assertion–Reason Generator", page_icon="🧠", layout="wide")
+st.markdown(
+    """
+    <script type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+    """,
+    unsafe_allow_html=True
+)
 st.title("🧠 Assertion–Reason Generator")
 
 # ====================================================
@@ -335,11 +343,12 @@ def orchestrate(final_prompt, selected_models):
 
     if "GPT-5" in selected_models:
         st.subheader("GPT-5 Output")
-        st.write(gpt_result.get("text", ""))
+        st.markdown(gpt_result.get("text", ""), unsafe_allow_html=True)
+
 
     if "Gemini 2.5 Pro" in selected_models:
         st.subheader("Gemini 2.5 Pro Output")
-        st.write(gemini_result.get("text", ""))
+        st.markdown(gemini_result.get("text", ""), unsafe_allow_html=True)
 
     # ===========================
     # COST TABLES

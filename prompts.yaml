@@ -87,10 +87,14 @@ prompt: |
     ---
 
     ### Answer Options (Fixed for Every Question)
-    (A) Both Assertion (A) and Reason (R) are true and R is the correct explanation of A.  
-    (B) Both Assertion (A) and Reason (R) are true but R is not the correct explanation of A.  
-    (C) Assertion (A) is true but Reason (R) is false.  
-    (D) Assertion (A) is false but Reason (R) is true.  
+   
+
+    **Options:**
+
+      A) Both Assertion (A) and Reason (R) are true, and Reason (R) explains Assertion (A).
+      B) Both Assertion (A) and Reason (R) are true, but Reason (R) does not explain Assertion (A).
+      C) Assertion (A) is true, but Reason (R) is false.
+      D) Assertion (A) is false, but Reason (R) is true.
 
     ---
 
@@ -178,17 +182,38 @@ prompt: |
     - If Option A/B: clarify how the Reason is or isn’t a valid explanation.  
     - If Option C/D: explain the truth–falsehood mismatch precisely.
 
-  ### DISTRACTOR ANALYSIS (Mandatory for Every Question — Separate Style Requirements)
+  ### DISTRACTOR ANALYSIS (Mandatory for Every Question — Correct/Incorrect Structure)
 
-    After the detailed justification, provide concise distractor feedback for **each incorrect option**.
+      For each incorrect option, follow this exact explanation structure:
 
-    Rules for distractor feedback:
-    - Length & Tone: Each explanation must be **under 4 lines**, written conversationally ("you might have thought…", "you may have overlooked…") while remaining mathematically precise.
-    - Purpose: Identify the **specific misconception** that would plausibly lead a student to choose that option and explain **why it is incorrect**, referencing the relevant logic, property, or step.
-    - Avoid generic labels (e.g., "careless mistake"); instead, point to the exact misapplied rule or misread symbol (e.g., "you treated √(a+b) as √a+√b" or "you applied distributivity to a non-linear expression").
-    - Maintain consistency with question notation and do not introduce new variables or extra unfamiliar concepts in the distractor lines.
+       **First Sentence — State the Student’s Belief**
+      - Begin with: “You selected this option because you believed that …”
+      - Then restate the interpretation of the option the student selected:
+        • Option A → A true, R true, and R explains A  
+        • Option B → A true, R true, but R does not explain A  
+        • Option C → A true, R false  
+        • Option D → A false, R true  
 
+       **Second Step — Why the Student Chose It**
+      - After the first sentence, continue with: “This may have happened because …”
+      - Explain the misconception or mistake that might have led the student to choose this option.
 
+      **Third Step — Correct the Misunderstanding**
+      - Continue with: “However, this is incorrect because …”
+      - Explain the actual truth values of A and R.
+      - Clearly show why the student's belief does not match the correct reasoning.
+
+      **Fourth Step — Final Clarification**
+      - End with: “So this option cannot be the correct answer.”  
+
+      **Important Rules:**
+      - Do NOT say: “You correctly identified that…”  
+      - Do NOT partially praise the student unless it matches the option's meaning.  
+      - Always align the explanation with the TRUE/FALSE nature of A and R.
+      - Keep the explanation simple, student-friendly, detailed, and grammatically correct.
+      - Use equations or symbols when needed.
+      - Maintain a smooth flow between sentences.
+      
   ### Content & Rigor Requirements
   1. Each question must represent one clear concept.  
   2. Include variety across the provided subtopics — don’t repeat the same logic pattern.  
