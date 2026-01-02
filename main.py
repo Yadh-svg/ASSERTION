@@ -83,26 +83,26 @@ new_concept_source = st.radio(
 )
 
 with st.form("input_form"):
-    subject = st.text_input("📘 Subject", "Mathematics")
-    grade = st.text_input("🎓 Grade", "Class 10")
-    chapter = st.text_input("📖 Chapter", "Real Numbers")
+    subject = st.text_input("📘 Subject", "")
+    grade = st.text_input("🎓 Grade", "")
+    chapter = st.text_input("📖 Chapter", "")
     num_questions = st.number_input("🔢 Number of Questions", min_value=1, max_value=20, value=5)
 
     topics = st.text_area(
         "📚 Topics",
-        "Real Numbers, Euclid's Division Lemma"
+        ""
     )
 
     old_concept = st.text_area(
         "📖 Old Concept (Prerequisite Knowledge)",
-        "Basic arithmetic operations\nFactors and multiples\nDivisibility rules"
+        ""
     )
 
     # Conditionally show input based on selection
     if new_concept_source == "Text Input":
         new_concept_text = st.text_area(
             "🧩 New Concept (Current Chapter Content)",
-            "Euclid's Division Lemma\nFundamental Theorem of Arithmetic\nIrrational Numbers"
+            ""
         )
         new_concept_pdf = None
     else:
@@ -115,7 +115,7 @@ with st.form("input_form"):
 
     additional_notes = st.text_area(
         "📝 Additional Notes (Optional)",
-        "Focus on conceptual understanding\nInclude real-world applications"
+        ""
     )
 
     generate_btn = st.form_submit_button("🚀 Generate Questions")
