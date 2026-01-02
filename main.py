@@ -1,14 +1,10 @@
-# app.py
+﻿# app.py
 import streamlit as st
 import yaml
-import time
-import threading
 import pandas as pd
 import os
-
 from google import genai
 from google.genai import types
-from openai import OpenAI
 
 # ====================================================
 # PAGE CONFIG
@@ -45,36 +41,16 @@ st.markdown(
 st.title("🧠 Assertion–Reason Generator")
 
 # ====================================================
-# MODEL SELECTION & API KEY INPUT
+# API KEY INPUT
 # ====================================================
-st.markdown("### 🤖 Select Models")
-selected_models = st.multiselect(
-    "Choose models to use:",
-    ["GPT-5", "Gemini 2.5 Pro"],
-    default=["Gemini 2.5 Pro"]
-)
-
-st.markdown("### 🔐 Enter API Keys")
-OPENAI_API_KEY = ""
-GEMINI_API_KEY = ""
-
-if "GPT-5" in selected_models:
-    OPENAI_API_KEY = st.text_input("OpenAI API Key", type="password")
-
-if "Gemini 2.5 Pro" in selected_models:
-    GEMINI_API_KEY = st.text_input("Gemini API Key", type="password")
+st.markdown("### 🔐 Enter Gemini API Key")
+GEMINI_API_KEY = st.text_input("Gemini API Key", type="password")
 
 st.markdown("---")
 
 # ====================================================
 # PRICING (FORCED ≤200k TIER)
 # ====================================================
-GPT5_PRICES = {
-    "input": 1.25,
-    "cached_input": 0.125,
-    "output": 10.00
-}
-
 GEMINI_PRICES = {
     "input": 1.25,
     "output": 10.00     # includes thinking tokens
@@ -99,6 +75,13 @@ PROMPT_TEMPLATE = data["prompt"]
 # ====================================================
 # INPUT FORM
 # ====================================================
+# New Concept Source Selection (outside form for dynamic updates)
+new_concept_source = st.radio(
+    "🆕 New Concept Source",
+    ["Text Input", "PDF Upload"],
+    horizontal=True
+)
+
 with st.form("input_form"):
     subject = st.text_input("📘 Subject", "Mathematics")
     grade = st.text_input("🎓 Grade", "Class 10")
@@ -110,9 +93,29 @@ with st.form("input_form"):
         "Real Numbers, Euclid's Division Lemma"
     )
 
-    key_concepts = st.text_area(
-        "🧩 Key Concepts (one per line)",
-        "Euclid’s Division Lemma\nFundamental Theorem of Arithmetic\nIrrational Numbers"
+    old_concept = st.text_area(
+        "📖 Old Concept (Prerequisite Knowledge)",
+        "Basic arithmetic operations\nFactors and multiples\nDivisibility rules"
+    )
+
+    # Conditionally show input based on selection
+    if new_concept_source == "Text Input":
+        new_concept_text = st.text_area(
+            "🧩 New Concept (Current Chapter Content)",
+            "Euclid's Division Lemma\nFundamental Theorem of Arithmetic\nIrrational Numbers"
+        )
+        new_concept_pdf = None
+    else:
+        new_concept_pdf = st.file_uploader(
+            "📄 Upload New Concept PDF",
+            type=["pdf"],
+            help="Upload a PDF containing the new concepts covered in this chapter"
+        )
+        new_concept_text = ""
+
+    additional_notes = st.text_area(
+        "📝 Additional Notes (Optional)",
+        "Focus on conceptual understanding\nInclude real-world applications"
     )
 
     generate_btn = st.form_submit_button("🚀 Generate Questions")
@@ -120,13 +123,28 @@ with st.form("input_form"):
 # ====================================================
 # PROMPT BUILDER
 # ====================================================
-def build_prompt(subject, grade, chapter, num_questions, key_concepts, topics):
+def build_prompt(subject, grade, chapter, num_questions, old_concept, new_concept, additional_notes, topics, has_pdf=False):
+    """
+    Build the prompt with new field structure.
+    If has_pdf is True, new_concept will indicate PDF is attached.
+    """
+    # If PDF is uploaded, indicate it in the new_concept field
+    if has_pdf:
+        new_concept_value = """The new concept content is provided in the attached PDF document. 
+Please carefully read and analyze the PDF to understand all topics, subtopics, definitions, theorems, 
+formulas, and examples covered in this chapter. Use this PDF content as the primary source for 
+generating questions about the new concepts the student is currently learning.But you should only make questions based on the Topic given the pdf is just for reference """
+    else:
+        new_concept_value = new_concept
+    
     inputs = {
         "subject": subject,
         "grade": grade,
         "chapter": chapter,
         "num_questions": num_questions,
-        "key_concepts": key_concepts,
+        "old_concept": old_concept,
+        "new_concept": new_concept_value,
+        "additional_notes": additional_notes,
         "topics": topics
     }
 
@@ -139,30 +157,10 @@ def build_prompt(subject, grade, chapter, num_questions, key_concepts, topics):
 
     return f"{prompt}\n\nGenerate {num_questions} Assertion–Reason questions."
 
+
 # ====================================================
 # TOKEN EXTRACTION
 # ====================================================
-def extract_gpt_tokens(response):
-    usage = getattr(response, "usage", None)
-    if not usage:
-        return {"input":0, "cached_input":0, "output":0}
-
-    input_tokens = int(getattr(usage, "input_tokens", 0))
-    output_tokens = int(getattr(usage, "output_tokens", 0))
-
-    cached = 0
-    try:
-        cached = usage.input_tokens_details.cached_tokens
-    except:
-        pass
-
-    return {
-        "input": input_tokens,
-        "cached_input": cached,
-        "output": output_tokens
-    }
-
-
 def extract_gemini_tokens(response):
     um = getattr(response, "usage_metadata", None)
     if not um:
@@ -180,18 +178,8 @@ def extract_gemini_tokens(response):
     }
 
 # ====================================================
-# COST CALCULATORS
+# COST CALCULATOR
 # ====================================================
-def calculate_gpt_cost(tokens):
-    normal_input = max(0, tokens["input"] - tokens["cached_input"])
-
-    return {
-        "normal_input": (normal_input / 1_000_000) * GPT5_PRICES["input"],
-        "cached_input": (tokens["cached_input"] / 1_000_000) * GPT5_PRICES["cached_input"],
-        "output":       (tokens["output"] / 1_000_000) * GPT5_PRICES["output"]
-    }
-
-
 def calculate_gemini_cost(tokens):
     return {
         "input": (tokens["input"] / 1_000_000) * GEMINI_PRICES["input"],
@@ -201,21 +189,8 @@ def calculate_gemini_cost(tokens):
     }
 
 # ====================================================
-# COST TABLE BUILDERS
+# COST TABLE BUILDER
 # ====================================================
-def build_gpt_cost_table(tokens, costs):
-    rows = [
-        ["Input (non-cached)", tokens["input"] - tokens["cached_input"], f"${GPT5_PRICES['input']}/1M", costs["normal_input"]],
-        ["Cached Input", tokens["cached_input"], f"${GPT5_PRICES['cached_input']}/1M", costs["cached_input"]],
-        ["Output (incl. reasoning)", tokens["output"], f"${GPT5_PRICES['output']}/1M", costs["output"]],
-        ["TOTAL", tokens["input"] + tokens["output"], "-", sum(costs.values())]
-    ]
-
-    df = pd.DataFrame(rows, columns=["Component", "Tokens", "Price/1M", "Cost"])
-    df["Cost"] = df["Cost"].apply(lambda x: f"${x:.6f}")
-    return df
-
-
 def build_gemini_cost_table(tokens, costs):
     correct_total_cost = costs["input"] + costs["output_total"]
 
@@ -233,43 +208,35 @@ def build_gemini_cost_table(tokens, costs):
 
 
 # ====================================================
-# MODEL RUNNERS
+# GEMINI RUNNER
 # ====================================================
-gpt_result = {}
 gemini_result = {}
 
-gpt_done = threading.Event()
-gemini_done = threading.Event()
-
-
-def run_gpt(prompt, api_key):
-    client = OpenAI(api_key=api_key)
-    try:
-        response = client.responses.create(
-            model="gpt-5",
-            reasoning={"effort": "medium"},
-            input=prompt
-        )
-        text = response.output_text or str(response)
-        gpt_result["raw"] = response
-        gpt_result["text"] = text
-    except Exception as e:
-        gpt_result["raw"] = None
-        gpt_result["text"] = f"[GPT-5 error] {e}"
-    finally:
-        gpt_done.set()
-
-
-def run_gemini(prompt, api_key):
+def run_gemini(prompt, api_key, pdf_file=None):
     client = genai.Client(api_key=api_key)
     try:
         config = types.GenerateContentConfig(
             thinking_config=types.ThinkingConfig(include_thoughts=False, thinking_budget=5000)
         )
 
+        # Prepare content parts
+        content_parts = []
+        
+        # If PDF is provided, add it using Part.from_bytes
+        if pdf_file is not None:
+            content_parts.append(
+                types.Part.from_bytes(
+                    data=pdf_file.read(),
+                    mime_type='application/pdf'
+                )
+            )
+        
+        # Add the prompt
+        content_parts.append(prompt)
+
         response = client.models.generate_content(
             model="gemini-2.5-pro",
-            contents=[prompt],
+            contents=content_parts,
             config=config
         )
 
@@ -285,104 +252,74 @@ def run_gemini(prompt, api_key):
     except Exception as e:
         gemini_result["raw"] = None
         gemini_result["text"] = f"[Gemini error] {e}"
-    finally:
-        gemini_done.set()
 
 # ====================================================
 # MAIN ORCHESTRATOR
 # ====================================================
-def orchestrate(final_prompt, selected_models):
-    gpt_done.clear()
-    gemini_done.clear()
-
-    # Start both in parallel
-    if "GPT-5" in selected_models:
-        threading.Thread(target=run_gpt, args=(final_prompt, OPENAI_API_KEY), daemon=True).start()
-    
-    if "Gemini 2.5 Pro" in selected_models:
-        threading.Thread(target=run_gemini, args=(final_prompt, GEMINI_API_KEY), daemon=True).start()
-
-    # Wait
+def run_generation(final_prompt, pdf_file=None):
+    # Run Gemini generation
     overall_status = st.empty()
-    overall_status.info("Running...")
-
-    while True:
-        gpt_finished = gpt_done.is_set() if "GPT-5" in selected_models else True
-        gemini_finished = gemini_done.is_set() if "Gemini 2.5 Pro" in selected_models else True
-        
-        if gpt_finished and gemini_finished:
-            break
-        time.sleep(0.1)
-
-    overall_status.success("Generation finished ✔")
+    overall_status.info("🤖 Generating questions with Gemini 2.5 Pro...")
+    
+    run_gemini(final_prompt, GEMINI_API_KEY, pdf_file)
+    
+    overall_status.success("✅ Generation finished!")
 
     # ===========================
     # Extract tokens & costs
     # ===========================
-    gpt_tokens = {"input": 0, "cached_input": 0, "output": 0}
-    gem_tokens = {"input": 0, "candidates": 0, "thinking": 0, "output_total": 0}
-    gpt_costs = {"normal_input": 0, "cached_input": 0, "output": 0}
-    gem_costs = {"input": 0, "candidates": 0, "thinking": 0, "output_total": 0}
-
-    if "GPT-5" in selected_models:
-        gpt_tokens = extract_gpt_tokens(gpt_result.get("raw"))
-        gpt_costs = calculate_gpt_cost(gpt_tokens)
-
-    if "Gemini 2.5 Pro" in selected_models:
-        gem_tokens = extract_gemini_tokens(gemini_result.get("raw"))
-        gem_costs = calculate_gemini_cost(gem_tokens)
-
-    total_gpt = sum(gpt_costs.values())
-    total_gem = sum(gem_costs.values())
-    total_all = total_gpt + total_gem
+    gem_tokens = extract_gemini_tokens(gemini_result.get("raw"))
+    gem_costs = calculate_gemini_cost(gem_tokens)
+    total_cost = sum(gem_costs.values())
 
     # ===========================
-    # OUTPUTS
+    # OUTPUT
     # ===========================
-    st.markdown("## 🧠 Model Outputs")
-
-    if "GPT-5" in selected_models:
-        st.subheader("GPT-5 Output")
-        st.markdown(gpt_result.get("text", ""), unsafe_allow_html=True)
-
-
-    if "Gemini 2.5 Pro" in selected_models:
-        st.subheader("Gemini 2.5 Pro Output")
-        st.markdown(gemini_result.get("text", ""), unsafe_allow_html=True)
+    st.markdown("## 🧠 Generated Questions")
+    st.markdown(gemini_result.get("text", ""), unsafe_allow_html=True)
 
     # ===========================
-    # COST TABLES
+    # COST TABLE
     # ===========================
     st.markdown("---")
     st.markdown("## 💰 Cost Breakdown")
-
-    if "GPT-5" in selected_models:
-        st.markdown("### GPT-5 Cost")
-        st.table(build_gpt_cost_table(gpt_tokens, gpt_costs))
-
-    if "Gemini 2.5 Pro" in selected_models:
-        st.markdown("### Gemini 2.5 Pro Cost")
-        st.table(build_gemini_cost_table(gem_tokens, gem_costs))
-
-    st.markdown("---")
-    st.markdown(f"### Final Total Cost: **${total_all:.6f}**")
+    st.table(build_gemini_cost_table(gem_tokens, gem_costs))
+    st.markdown(f"### Total Cost: **${total_cost:.6f}**")
 
 
 # ====================================================
 # RUN
 # ====================================================
 if generate_btn:
-    if not selected_models:
-        st.error("Please select at least one model.")
-        st.stop()
-
-    if "GPT-5" in selected_models and not OPENAI_API_KEY:
-        st.error("Please enter OpenAI API Key.")
-        st.stop()
-        
-    if "Gemini 2.5 Pro" in selected_models and not GEMINI_API_KEY:
+    if not GEMINI_API_KEY:
         st.error("Please enter Gemini API Key.")
         st.stop()
 
-    prompt = build_prompt(subject, grade, chapter, num_questions, key_concepts, topics)
-    orchestrate(prompt, selected_models)
+    # Validate new concept input
+    if new_concept_source == "PDF Upload":
+        if new_concept_pdf is None:
+            st.error("Please upload a PDF file for new concepts or switch to text input.")
+            st.stop()
+        # Use PDF
+        has_pdf = True
+        new_concept_final = ""
+        pdf_to_upload = new_concept_pdf
+    else:
+        # Use text
+        has_pdf = False
+        new_concept_final = new_concept_text
+        pdf_to_upload = None
+
+    prompt = build_prompt(
+        subject, 
+        grade, 
+        chapter, 
+        num_questions, 
+        old_concept, 
+        new_concept_final, 
+        additional_notes, 
+        topics, 
+        has_pdf=has_pdf
+    )
+    run_generation(prompt, pdf_file=pdf_to_upload)
+

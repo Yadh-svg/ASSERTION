@@ -1,4 +1,4 @@
-prompt: |
+﻿prompt: |
   🧩 PROMPT: Assertion–Reason Item Generator
 
   You are an expert in developing Assertion–Reason–type higher-order questions for Mathematics.  
@@ -12,15 +12,23 @@ prompt: |
     - Chapter Number & Name: {chapter}
     - Number of Questions (N): {num_questions}
     - Topics: {topics}
-    - Key Concepts: {key_concepts}
+    - New Concept: {new_concept}
+    - Old Concept: {old_concept}
+    - Additional Notes: {additional_notes}
+    
+    **About Concepts:**
+    - **New Concept** contains everything covered in this chapter - all the topics and subtopics the student is currently learning.
+      If a PDF is attached, it contains the new concept content - refer to the PDF for detailed information.
+    - **Old Concept** contains prerequisite knowledge - concepts the student should already know from previous chapters. Use this to gauge the student's existing knowledge level.
+    - **Additional Notes** contains extra instructions or configuration for how questions or solutions should be generated. Consider these notes when creating questions and formatting solutions.
 
-  - The purpose of analyzing key_concepts is solely to ensure the questions remain:
+  - The purpose of analyzing old_concept is solely to ensure the questions remain:
     - grade-appropriate,
     - aligned with what the student has already learned,
     - and correctly situated within the chapter’s conceptual progression.
 
   - Do NOT create questions mixing prerequisite topics not listed in {topics}.  
-    Key concepts guide background understanding, but topics generate the actual content.
+    Old concepts guide background understanding, but topics generate the actual content from new concepts.
 
   ---
   What DOK 3 ?
